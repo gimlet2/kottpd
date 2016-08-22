@@ -1,6 +1,19 @@
 # kottpd
 
 Kottpd - REST framework written in pure Kotlin.
+``` 
+    <repository>
+        <id>stage</id>
+        <url>https://oss.sonatype.org/content/groups/central-staging/</url>
+    </repository>
+    ...
+    <dependency>
+        <groupId>org.kottpd</groupId>
+        <artifactId>server</artifactId>
+        <version>0.0.3</version>
+    </dependency>
+```
+
 
 ```
     val server = Server() // default port is 9000
