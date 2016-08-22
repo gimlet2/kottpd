@@ -9,20 +9,62 @@ import java.net.Socket
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-val threadPool: ExecutorService = Executors.newCachedThreadPool()
-
-val port: Int = (System.getProperty("server.port") ?: "9000").toInt()
 
 fun main(args: Array<String>) {
-    println("Server start on port $port")
-    val socket = ServerSocket(port)
-    while (true) {
-        threadPool.submit(ClientThread(socket.accept()))
-    }
-
+    val server = Server()
+    server.get("/hello", { req, res -> res.send("Hello") })
+    server.get("/do/.*/1", { req, res -> res.send("Hello world") })
+    server.post("/data", { req, res -> res.send(req.content, Status.Created) })
+    server.start()
 }
 
-class ClientThread(val socket: Socket) : Runnable {
+class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
+
+    val threadPool: ExecutorService = Executors.newCachedThreadPool()
+    val bindings: Map<HttpMethod, MutableMap<String, (HttpRequest, HttpResponse) -> Unit>> = mapOf(
+            Pair(HttpMethod.GET, mutableMapOf()),
+            Pair(HttpMethod.POST, mutableMapOf()),
+            Pair(HttpMethod.PUT, mutableMapOf()),
+            Pair(HttpMethod.DELETE, mutableMapOf()),
+            Pair(HttpMethod.OPTIONS, mutableMapOf()),
+            Pair(HttpMethod.CONNECT, mutableMapOf()),
+            Pair(HttpMethod.HEAD, mutableMapOf()),
+            Pair(HttpMethod.TRACE, mutableMapOf())
+    )
+
+    fun start() {
+        println("Server start on port $port")
+        val socket = ServerSocket(port)
+        while (true) {
+            threadPool.submit(ClientThread(socket.accept(), { request ->
+                val routes = bindings[request.method]!!
+                routes.getOrElse(request.url, { routes.filter { it.key.toRegex().matches(request.url) }.values.first() })
+            }))
+        }
+    }
+
+    fun bind(method: HttpMethod, path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+        bindings[method]!!.put(path, call)
+    }
+
+    fun get(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+        bind(HttpMethod.GET, path, call)
+    }
+
+    fun post(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+        bind(HttpMethod.POST, path, call)
+    }
+
+    fun put(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+        bind(HttpMethod.PUT, path, call)
+    }
+
+    fun delete(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+        bind(HttpMethod.DELETE, path, call)
+    }
+}
+
+class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Unit) : Runnable {
 
     override fun run() {
         val input = BufferedReader(InputStreamReader(socket.inputStream))
@@ -37,7 +79,7 @@ class ClientThread(val socket: Socket) : Runnable {
             }
             headers
         })
-        doSmth(request, HttpResponse(stream = out))
+        match(request).invoke(request, HttpResponse(stream = out))
         out.flush()
         socket.close()
     }
@@ -46,11 +88,6 @@ class ClientThread(val socket: Socket) : Runnable {
         val split = reader.readLine().split(' ')
         return HttpRequest(HttpMethod.valueOf(split[0]), split[1], split[2], eval(), reader)
     }
-}
-
-fun doSmth(request: HttpRequest, response: HttpResponse) {
-    println(request.content)
-    response.send(request.content, Status.OK)
 }
 
 data class HttpRequest(val method: HttpMethod,
