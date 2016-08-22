@@ -4,12 +4,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.kottpd</groupId>
-    <artifactId>server</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.github.gimlet2</groupId>
+    <artifactId>kottpd</artifactId>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
 
-    <name>org.kottpd:server</name>
+    <name>com.github.gimlet2:kottpd</name>
     <description>Kottpd - REST framework written in pure Kotlin.
     </description>
     <licenses>
