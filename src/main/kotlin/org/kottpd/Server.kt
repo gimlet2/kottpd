@@ -1,4 +1,4 @@
-package com.ecrowd
+package org.kottpd
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -10,9 +10,11 @@ import java.util.concurrent.Executors
 
 val threadPool = Executors.newCachedThreadPool()
 
+val port: Int = (System.getProperty("server.port") ?: "9000").toInt()
+
 fun main(args: Array<String>) {
-    println("Hello, World")
-    val socket = ServerSocket(9000)
+    println("Server start on port $port")
+    val socket = ServerSocket(port)
     while (true) {
         threadPool.submit(ClientThread(socket.accept()))
     }
@@ -46,8 +48,8 @@ class ClientThread(val socket: Socket) : Runnable {
 }
 
 fun doSmth(request: HttpRequest, response: HttpResponse) {
-    println(request.content())
-    response.send(200, request.content())
+    println(request.content)
+    response.send(200, request.content)
 }
 
 data class HttpRequest(val method: HttpMethod,
@@ -55,19 +57,8 @@ data class HttpRequest(val method: HttpMethod,
                        val httpVersion: String,
                        val headers: Map<String, String>,
                        val stream: BufferedReader) {
-    var content: String? = null
-    fun content(): String {
-        if (content != null) {
-            return content as String
-        }
-        content = ""
-        if (headers.containsKey("Content-Length")) {
-            val contentLength: Int = if (headers["Content-Length"] != null) headers["Content-Length"]!!.toInt() else 0
-            for (i: Int in (0..contentLength - 1)) {
-                content += stream.read().toChar()
-            }
-        }
-        return content as String
+    val content: String by lazy {
+        (1..headers.getOrElse("Content-Length", { "0" }).toInt()).fold("", { a, b -> a + stream.read().toChar() })
     }
 }
 
