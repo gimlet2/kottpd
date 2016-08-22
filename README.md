@@ -1,6 +1,6 @@
 # kottpd
 
-Kottpd - small http server written in Kotlin.
+Kottpd - REST framework written in pure Kotlin.
 
 ```
     val server = Server() // default port is 9000

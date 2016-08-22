@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 fun main(args: Array<String>) {
     val server = Server()
     server.get("/hello", { req, res -> res.send("Hello") })
-    server.get("/do/.*/1", { req, res -> res.send("Hello world") })
+    server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
     server.start()
 }
