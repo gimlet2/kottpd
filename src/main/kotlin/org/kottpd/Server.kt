@@ -1,13 +1,14 @@
 package org.kottpd
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
+import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
+import java.security.KeyStore
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
 
 
 fun main(args: Array<String>) {
@@ -16,6 +17,7 @@ fun main(args: Array<String>) {
     server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
     server.start()
+//    server.start(9443, true, "./keystore.jks", "password")
 }
 
 class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
@@ -32,22 +34,40 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
             Pair(HttpMethod.TRACE, mutableMapOf())
     )
 
-    fun start() {
-        println("Server start on port $port")
-        val socket = ServerSocket(port)
-        while (true) {
-            threadPool.submit(ClientThread(socket.accept(), { request ->
-                bindings[request.method]!!.let { routes ->
-                    routes.getOrElse(request.url, {
-                        routes.filter {
-                            it.key.toRegex().matches(request.url)
-                        }.values.firstOr {
-                            { req: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
-                        }
-                    }
-                    )
+    fun start(port: Int = this.port, secure: Boolean = false, keyStoreFile: String = "", password: String = "") {
+        threadPool.submit {
+            println("Server start on port $port")
+            val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
+            while (true) {
+                threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+            }
+        }
+    }
+
+    private fun secureSocket(port: Int, keyStoreFile: String, password: String): ServerSocket {
+
+        /* Create keystore */
+        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+        keyStore.load(FileInputStream(keyStoreFile), password.toCharArray())
+
+        /* Get factory for the given keystore */
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(keyStore) }
+        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(keyStore, password.toCharArray()) }
+        return SSLContext.getInstance("SSL").apply { init(kmf.keyManagers, null, null) }
+                .serverSocketFactory.createServerSocket(port)
+
+    }
+
+    private fun matchRequest(request: HttpRequest): (HttpRequest, HttpResponse) -> Unit {
+        return bindings[request.method]!!.let { routes ->
+            routes.getOrElse(request.url, {
+                routes.filter {
+                    it.key.toRegex().matches(request.url)
+                }.values.firstOrElse {
+                    { req: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
                 }
-            }))
+            }
+            )
         }
     }
 
@@ -111,12 +131,13 @@ data class HttpRequest(val method: HttpMethod,
 data class HttpResponse(var status: Status = Status.OK,
                         val stream: PrintWriter) {
     fun send(content: String, status: Status = this.status, headers: Map<String, String> = emptyMap()) {
-        stream.println("HTTP1/1 ${status.code} ${status.value}")
+        stream.println("HTTP/1.1 ${status.code} ${status.value}")
         if (headers.isNotEmpty()) {
             headers.forEach { stream.println("${it.key}: ${it.value}") }
             stream.println()
         }
-        stream.println(content)
+        stream.println()
+        stream.print(content)
     }
 
 }
@@ -161,7 +182,7 @@ enum class Status(val code: Int, val value: String) {
     NetworkAuthenticationRequired(511, "Network Authentication Required")
 }
 
-fun <T> Iterable<T>.firstOr(eval: () -> T): T {
+fun <T> Iterable<T>.firstOrElse(eval: () -> T): T {
     return this.firstOrNull() ?: return eval.invoke()
 }
 
