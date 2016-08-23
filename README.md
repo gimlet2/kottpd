@@ -15,5 +15,6 @@ Kottpd - REST framework written in pure Kotlin.
     server.get("/hello", { req, res -> res.send("Hello") })
     server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
+    server.start(9443, true, "./keystore.jks", "password")
     server.start()
 ```
