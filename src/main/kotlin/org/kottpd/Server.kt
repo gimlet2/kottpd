@@ -37,14 +37,22 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
         val socket = ServerSocket(port)
         while (true) {
             threadPool.submit(ClientThread(socket.accept(), { request ->
-                val routes = bindings[request.method]!!
-                routes.getOrElse(request.url, { routes.filter { it.key.toRegex().matches(request.url) }.values.first() })
+                bindings[request.method]!!.let { routes ->
+                    routes.getOrElse(request.url, {
+                        routes.filter {
+                            it.key.toRegex().matches(request.url)
+                        }.values.firstOr {
+                            { req: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
+                        }
+                    }
+                    )
+                }
             }))
         }
     }
 
     fun bind(method: HttpMethod, path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
-        bindings[method]!!.put(path, call)
+        bindings[method]?.put(path, call)
     }
 
     fun get(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
@@ -151,5 +159,9 @@ enum class Status(val code: Int, val value: String) {
     HTTPVersionNotSupported(505, "HTTP Version Not Supported"), VariantAlsoNegotiates(506, "Variant Also Negotiates"),
     InsufficientStorage(507, "Insufficient Storage"), LoopDetected(508, "Loop Detected"), NotExtended(510, "Not Extended"),
     NetworkAuthenticationRequired(511, "Network Authentication Required")
+}
+
+fun <T> Iterable<T>.firstOr(eval: () -> T): T {
+    return this.firstOrNull() ?: return eval.invoke()
 }
 
