@@ -35,9 +35,34 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.0.3</kotlin.version>
+        <kotlin.version>1.1-M01</kotlin.version>
         <junit.version>4.12</junit.version>
     </properties>
+    <repositories>
+
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>kotlin-eap</id>
+            <url>https://dl.bintray.com/kotlin/kotlin-eap-1.1/</url>
+
+        </repository>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -61,6 +86,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
