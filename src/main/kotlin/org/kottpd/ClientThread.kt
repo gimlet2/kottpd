@@ -27,8 +27,9 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
     }
 
     fun readRequest(reader: BufferedReader, eval: () -> Map<String, String>): HttpRequest {
-        val split = reader.readLine().split(' ')
-        return HttpRequest(HttpMethod.valueOf(split[0]), split[1], split[2], eval(), reader)
+        reader.readLine().split(' ').let {
+            return HttpRequest(HttpMethod.valueOf(it[0]), it[1], it[2], eval(), reader)
+        }
     }
 }
 
