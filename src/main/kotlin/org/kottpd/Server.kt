@@ -1,5 +1,6 @@
 package org.kottpd
 
+import java.io.File
 import java.io.FileInputStream
 import java.net.ServerSocket
 import java.security.KeyStore
@@ -12,6 +13,7 @@ import javax.net.ssl.TrustManagerFactory
 
 fun main(args: Array<String>) {
     val server = Server()
+    server.staticFiles("/public")
     server.get("/hello", { req, res -> res.send("Hello") })
     server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
@@ -88,6 +90,17 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     fun delete(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
         bind(HttpMethod.DELETE, path, call)
+    }
+
+    fun staticFiles(path: String) {
+        val fullPath = javaClass.getResource(path).file
+        File(fullPath)
+                .walkTopDown()
+                .forEach {
+                    if (!it.isDirectory) {
+                        get(it.path.substring(fullPath.length), { req, res -> it.inputStream().copyTo(res.stream) })
+                    }
+                }
     }
 }
 

@@ -2,8 +2,6 @@ package org.kottpd
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
 import java.net.Socket
 import java.util.*
 
@@ -11,7 +9,7 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
 
     override fun run() {
         val input = BufferedReader(InputStreamReader(socket.inputStream))
-        val out = PrintWriter(OutputStreamWriter(socket.outputStream))
+        val out = socket.outputStream
         val request = readRequest(input, {
             LinkedHashMap<String, String>().apply {
                 input.lineSequence().takeWhile { a -> a.isNotBlank() }.forEach { line ->
