@@ -6,8 +6,12 @@ import java.io.PrintWriter
 
 data class HttpResponse(var status: Status = Status.OK,
                         val stream: OutputStream) {
+    private val printWriter: PrintWriter by lazy {
+        PrintWriter(OutputStreamWriter(stream))
+    }
+
     fun send(content: String, status: Status = this.status, headers: Map<String, String> = emptyMap()) {
-        val writer = PrintWriter(OutputStreamWriter(stream))
+        val writer = printWriter
         writer.println("HTTP/1.1 ${status.code} ${status.value}")
         if (headers.isNotEmpty()) {
             headers.forEach { writer.println("${it.key}: ${it.value}") }
@@ -17,4 +21,7 @@ data class HttpResponse(var status: Status = Status.OK,
         writer.print(content)
     }
 
+    fun flush() {
+        printWriter.flush()
+    }
 }

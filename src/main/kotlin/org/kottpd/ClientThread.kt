@@ -19,8 +19,9 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
                 }
             }
         })
-        match(request).invoke(request, HttpResponse(stream = out))
-        out.flush()
+        val httpResponse = HttpResponse(stream = out)
+        match(request).invoke(request, httpResponse)
+        httpResponse.flush()
         socket.close()
     }
 
