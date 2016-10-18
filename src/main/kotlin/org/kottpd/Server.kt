@@ -15,6 +15,7 @@ fun main(args: Array<String>) {
     val server = Server()
     server.staticFiles("/public")
     server.get("/hello", { req, res -> res.send("Hello") })
+    server.get("/test", { req, res -> "Hello" })
     server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
     server.start()
@@ -24,7 +25,7 @@ fun main(args: Array<String>) {
 class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
 
     val threadPool: ExecutorService = Executors.newCachedThreadPool()
-    val bindings: Map<HttpMethod, MutableMap<String, (HttpRequest, HttpResponse) -> Unit>> = mapOf(
+    val bindings: Map<HttpMethod, MutableMap<String, (HttpRequest, HttpResponse) -> Any>> = mapOf(
             Pair(HttpMethod.GET, mutableMapOf()),
             Pair(HttpMethod.POST, mutableMapOf()),
             Pair(HttpMethod.PUT, mutableMapOf()),
@@ -59,7 +60,7 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     }
 
-    private fun matchRequest(request: HttpRequest): (HttpRequest, HttpResponse) -> Unit {
+    private fun matchRequest(request: HttpRequest): (HttpRequest, HttpResponse) -> Any {
         return bindings[request.method]!!.let { routes ->
             routes.getOrElse(request.url, {
                 routes.filter {
@@ -72,23 +73,23 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
         }
     }
 
-    fun bind(method: HttpMethod, path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+    fun bind(method: HttpMethod, path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bindings[method]?.put(path, call)
     }
 
-    fun get(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+    fun get(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bind(HttpMethod.GET, path, call)
     }
 
-    fun post(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+    fun post(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bind(HttpMethod.POST, path, call)
     }
 
-    fun put(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+    fun put(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bind(HttpMethod.PUT, path, call)
     }
 
-    fun delete(path: String, call: (request: HttpRequest, response: HttpResponse) -> Unit) {
+    fun delete(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bind(HttpMethod.DELETE, path, call)
     }
 

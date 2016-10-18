@@ -5,7 +5,7 @@ import java.io.InputStreamReader
 import java.net.Socket
 import java.util.*
 
-class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Unit) : Runnable {
+class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) : Runnable {
 
     override fun run() {
         val input = BufferedReader(InputStreamReader(socket.inputStream))
@@ -20,7 +20,10 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
             }
         })
         val httpResponse = HttpResponse(stream = out)
-        match(request).invoke(request, httpResponse)
+        val result = match(request).invoke(request, httpResponse)
+        if (result !is Unit) {
+            httpResponse.send(result.toString())
+        }
         httpResponse.flush()
         socket.close()
     }
