@@ -98,7 +98,11 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                 .walkTopDown()
                 .forEach {
                     if (!it.isDirectory) {
-                        get(it.path.substring(fullPath.length), { req, res -> it.inputStream().copyTo(res.stream) })
+                        val file = it.path.substring(fullPath.length)
+                        get(file, { req, res -> it.inputStream().copyTo(res.stream) })
+                        if (file == "/index.html" || file == "/index.htm") {
+                            get("/", { req, res -> it.inputStream().copyTo(res.stream) })
+                        }
                     }
                 }
     }
