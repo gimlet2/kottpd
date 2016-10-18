@@ -5,7 +5,7 @@ Kottpd - REST framework written in pure Kotlin.
     <dependency>
         <groupId>com.github.gimlet2</groupId>
         <artifactId>kottpd</artifactId>
-        <version>0.0.5</version>
+        <version>0.0.6</version>
     </dependency>
 ```
 
@@ -14,6 +14,7 @@ Kottpd - REST framework written in pure Kotlin.
     val server = Server() // default port is 9000
     server.staticFiles("/public")
     server.get("/hello", { req, res -> res.send("Hello") })
+    server.get("/hello_simple", { req, res -> "Hello" })
     server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
     server.post("/data", { req, res -> res.send(req.content, Status.Created) })
     server.start(9443, true, "./keystore.jks", "password")
