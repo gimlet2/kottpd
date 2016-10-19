@@ -11,14 +11,13 @@ data class HttpResponse(var status: Status = Status.OK,
     }
 
     fun send(content: String, status: Status = this.status, headers: Map<String, String> = emptyMap()) {
-        val writer = printWriter
-        writer.println("HTTP/1.1 ${status.code} ${status.value}")
+        printWriter.println("HTTP/1.1 ${status.code} ${status.value}")
         if (headers.isNotEmpty()) {
-            headers.forEach { writer.println("${it.key}: ${it.value}") }
-            writer.println()
+            headers.forEach { printWriter.println("${it.key}: ${it.value}") }
+            printWriter.println()
         }
-        writer.println()
-        writer.print(content)
+        printWriter.println()
+        printWriter.print(content)
     }
 
     fun flush() {
