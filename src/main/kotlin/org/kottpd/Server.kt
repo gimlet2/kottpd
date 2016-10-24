@@ -12,13 +12,17 @@ import javax.net.ssl.TrustManagerFactory
 
 
 fun main(args: Array<String>) {
-    val server = Server()
-    server.staticFiles("/public")
-    server.get("/hello", { req, res -> res.send("Hello") })
-    server.get("/test", { req, res -> "Hello" })
-    server.get("/do/.*/smth", { req, res -> res.send("Hello world") })
-    server.post("/data", { req, res -> res.send(req.content, Status.Created) })
-    server.start()
+    Server().apply {
+        staticFiles("/public")
+        get("/hello", { req, res -> res.send("Hello") })
+        get("/test", { req, res -> "Hello" })
+        get("/do/.*/smth", { req, res -> res.send("Hello world") })
+        post("/data", { req, res -> res.send(req.content, Status.Created) })
+        before("/hello", { req, res -> res.send("before\n") })
+        before({ req, res -> res.send("ALL before\n") })
+        after("/hello", { req, res -> res.send("\nafter\n") })
+        after({ req, res -> res.send("ALL after\n") })
+    }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }
 
@@ -36,13 +40,45 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
             Pair(HttpMethod.TRACE, mutableMapOf())
     )
 
+    val filtersBefore: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
+    val filtersAfter: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
+
     fun start(port: Int = this.port, secure: Boolean = false, keyStoreFile: String = "", password: String = "") {
+        bindFilters()
         threadPool.submit {
             println("Server start on port $port")
             val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
             while (true) {
                 threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
             }
+        }
+    }
+
+    private fun bindFilters() {
+        for (binding in bindings) {
+            val iterator = binding.value.iterator()
+            while (iterator.hasNext()) {
+                var (key, action) = iterator.next()
+                for ((path, before) in filtersBefore) {
+                    if (key == path || key.matches(path.toRegex())) {
+                        action = chain(before, action)
+                        binding.value[key] = action
+                    }
+                }
+                for ((path, after) in filtersAfter) {
+                    if (key == path || key.matches(path.toRegex())) {
+                        action = chain(action, after)
+                        binding.value[key] = action
+                    }
+                }
+            }
+        }
+    }
+
+    private fun chain(a: (HttpRequest, HttpResponse) -> Any, b: (HttpRequest, HttpResponse) -> Any): (HttpRequest, HttpResponse) -> Any {
+        return { req: HttpRequest, res: HttpResponse ->
+            a.invoke(req, res)
+            b.invoke(req, res)
         }
     }
 
@@ -91,6 +127,22 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     fun delete(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
         bind(HttpMethod.DELETE, path, call)
+    }
+
+    fun before(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
+        filtersBefore.put(path, call)
+    }
+
+    fun before(call: (request: HttpRequest, response: HttpResponse) -> Any) {
+        filtersBefore.put(".*", call)
+    }
+
+    fun after(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
+        filtersAfter.put(path, call)
+    }
+
+    fun after(call: (request: HttpRequest, response: HttpResponse) -> Any) {
+        filtersAfter.put(".*", call)
     }
 
     fun staticFiles(path: String) {

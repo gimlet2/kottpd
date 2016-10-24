@@ -10,13 +10,18 @@ data class HttpResponse(var status: Status = Status.OK,
         PrintWriter(OutputStreamWriter(stream))
     }
 
+    private var dirty = false
+
     fun send(content: String, status: Status = this.status, headers: Map<String, String> = emptyMap()) {
-        printWriter.println("HTTP/1.1 ${status.code} ${status.value}")
-        if (headers.isNotEmpty()) {
-            headers.forEach { printWriter.println("${it.key}: ${it.value}") }
+        if (!dirty) {
+            printWriter.println("HTTP/1.1 ${status.code} ${status.value}")
+            if (headers.isNotEmpty()) {
+                headers.forEach { printWriter.println("${it.key}: ${it.value}") }
+                printWriter.println()
+            }
             printWriter.println()
+            dirty = true
         }
-        printWriter.println()
         printWriter.print(content)
     }
 
