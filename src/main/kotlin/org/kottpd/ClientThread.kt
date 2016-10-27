@@ -12,7 +12,7 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
         val out = socket.outputStream
         val request = readRequest(input, {
             LinkedHashMap<String, String>().apply {
-                input.lineSequence().takeWhile { a -> a.isNotBlank() }.forEach { line ->
+                input.lineSequence().takeWhile(String::isNotBlank).forEach { line ->
                     line.split(":").let {
                         put(it[0], it[1].trim())
                     }

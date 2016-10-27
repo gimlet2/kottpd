@@ -9,19 +9,21 @@ import java.util.concurrent.Executors
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
+import kotlin.reflect.KClass
 
 
 fun main(args: Array<String>) {
     Server().apply {
         staticFiles("/public")
         get("/hello", { req, res -> res.send("Hello") })
-        get("/test", { req, res -> "Hello" })
+        get("/test", { req, res -> throw IllegalStateException("AAA") })
         get("/do/.*/smth", { req, res -> res.send("Hello world") })
         post("/data", { req, res -> res.send(req.content, Status.Created) })
         before("/hello", { req, res -> res.send("before\n") })
         before({ req, res -> res.send("ALL before\n") })
         after("/hello", { req, res -> res.send("\nafter\n") })
         after({ req, res -> res.send("ALL after\n") })
+        exception(IllegalStateException::class, { req, res -> "AccessErrror" })
     }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }
@@ -42,6 +44,7 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     val filtersBefore: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
     val filtersAfter: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
+    val exceptions: MutableMap<Class<out RuntimeException>, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
 
     fun start(port: Int = this.port, secure: Boolean = false, keyStoreFile: String = "", password: String = "") {
         bindFilters()
@@ -70,6 +73,21 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                         action = chain(action, after)
                         binding.value[key] = action
                     }
+                }
+                val actionRef = action
+                if (exceptions.isNotEmpty()) {
+                    action = { req: HttpRequest, res: HttpResponse ->
+                        try {
+                            actionRef(req, res)
+                        } catch (e: RuntimeException) {
+                            if (exceptions.contains(e.javaClass)) {
+                                exceptions[e.javaClass]!!.invoke(req, res)
+                            } else {
+                                res.send(e.message ?: "Error", Status.InternalServerError)
+                            }
+                        }
+                    }
+                    binding.value[key] = action
                 }
             }
         }
@@ -143,6 +161,10 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     fun after(call: (request: HttpRequest, response: HttpResponse) -> Any) {
         filtersAfter.put(".*", call)
+    }
+
+    fun exception(klass: KClass<out RuntimeException>, call: (request: HttpRequest, response: HttpResponse) -> Any) {
+        exceptions.put(klass.java, call)
     }
 
     fun staticFiles(path: String) {
