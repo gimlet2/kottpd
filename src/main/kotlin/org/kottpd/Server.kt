@@ -2,6 +2,7 @@ package org.kottpd
 
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.net.ServerSocket
 import java.security.KeyStore
 import java.util.concurrent.ExecutorService
@@ -50,9 +51,14 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
         bindFilters()
         threadPool.submit {
             println("Server start on port $port")
-            val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
-            while (true) {
-                threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+            try {
+                val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
+                while (true) {
+                    threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+                }
+            } catch (e: IOException) {
+                println(e.message)
+                System.exit(1)
             }
         }
     }
