@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
         before({ req, res -> res.send("ALL before\n") })
         after("/hello", { req, res -> res.send("\nafter\n") })
         after({ req, res -> res.send("ALL after\n") })
-        exception(IllegalStateException::class, { req, res -> "AccessErrror" })
+        exception(IllegalStateException::class, { req, res -> "Illegal State" })
     }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }

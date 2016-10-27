@@ -5,7 +5,7 @@ Kottpd - REST framework written in pure Kotlin. It is avaliable from maven centr
     <dependency>
         <groupId>com.github.gimlet2</groupId>
         <artifactId>kottpd</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
     </dependency>
 ```
 
@@ -22,7 +22,8 @@ Kottpd - REST framework written in pure Kotlin. It is avaliable from maven centr
     server.before({ req, res -> res.send("ALL before\n") })
     server.after("/hello", { req, res -> res.send("\nafter\n") })
     server.after({ req, res -> res.send("ALL after\n") })
-    
+    // exceptions handler
+    server.exception(IllegalStateException::class, { req, res -> "Illegal State" })
     server.start(9443, true, "./keystore.jks", "password") // for secured conection
     server.start()
 ```
