@@ -1,31 +1,26 @@
 package org.kottpd
 
-import java.io.OutputStream
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
+import org.kottpd.pal.Writer
 
 data class HttpResponse(var status: Status = Status.OK,
-                        val stream: OutputStream) {
-    private val printWriter: PrintWriter by lazy {
-        PrintWriter(OutputStreamWriter(stream))
-    }
+                        val stream: Writer) {
 
     private var dirty = false
 
     fun send(content: String, status: Status = this.status, headers: Map<String, String> = emptyMap()) {
         if (!dirty) {
-            printWriter.println("HTTP/1.1 ${status.code} ${status.value}")
+            stream.println("HTTP/1.1 ${status.code} ${status.value}")
             if (headers.isNotEmpty()) {
-                headers.forEach { printWriter.println("${it.key}: ${it.value}") }
-                printWriter.println()
+                headers.forEach { stream.println("${it.key}: ${it.value}") }
+                stream.println()
             }
-            printWriter.println()
+            stream.println()
             dirty = true
         }
-        printWriter.print(content)
+        stream.print(content)
     }
 
     fun flush() {
-        printWriter.flush()
+        stream.flush()
     }
 }

@@ -1,21 +1,12 @@
 package org.kottpd
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.net.ServerSocket
-import java.security.KeyStore
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManagerFactory
-import kotlin.reflect.KClass
+import org.kottpd.pal.IOException
+import org.kottpd.pal.serverSocker
 
 
 fun main(args: Array<String>) {
     Server().apply {
-        staticFiles("/public")
+        //        staticFiles("/public")
         get("/hello", { req, res -> res.send("Hello") })
         get("/test", { req, res -> throw IllegalStateException("AAA") })
         get("/do/.*/smth", { req, res -> res.send("Hello world") })
@@ -24,14 +15,15 @@ fun main(args: Array<String>) {
         before({ req, res -> res.send("ALL before\n") })
         after("/hello", { req, res -> res.send("\nafter\n") })
         after({ req, res -> res.send("ALL after\n") })
-        exception(IllegalStateException::class, { req, res -> "Illegal State" })
+//        exception(IllegalStateException::class, { req, res -> "Illegal State" })
     }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }
 
-class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
+class Server(val port: Int = "9000".toInt()) {
+//class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
 
-    val threadPool: ExecutorService = Executors.newCachedThreadPool()
+    //    val threadPool: ExecutorService = Executors.newCachedThreadPool()
     val bindings: Map<HttpMethod, MutableMap<String, (HttpRequest, HttpResponse) -> Any>> = mapOf(
             Pair(HttpMethod.GET, mutableMapOf()),
             Pair(HttpMethod.POST, mutableMapOf()),
@@ -49,18 +41,21 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     fun start(port: Int = this.port, secure: Boolean = false, keyStoreFile: String = "", password: String = "") {
         bindFilters()
-        threadPool.submit {
+//        threadPool.submit {
             println("Server start on port $port")
             try {
-                val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
+                val socket = serverSocker(port)
+//                        if (secure) secureSocket(port, keyStoreFile, password) else
+//                            ServerSocket(port)
                 while (true) {
-                    threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+//                    threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+                    ClientThread(socket.accept(), { matchRequest(it) }).run()
                 }
             } catch (e: IOException) {
                 println(e.message)
-                System.exit(1)
+//                System.exit(1)
             }
-        }
+//        }
     }
 
     private fun bindFilters() {
@@ -105,20 +100,20 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
             b.invoke(req, res)
         }
     }
-
-    private fun secureSocket(port: Int, keyStoreFile: String, password: String): ServerSocket {
-
-        /* Create keystore */
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(FileInputStream(keyStoreFile), password.toCharArray())
-
-        /* Get factory for the given keystore */
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(keyStore) }
-        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(keyStore, password.toCharArray()) }
-        return SSLContext.getInstance("SSL").apply { init(kmf.keyManagers, null, null) }
-                .serverSocketFactory.createServerSocket(port)
-
-    }
+//
+//    private fun secureSocket(port: Int, keyStoreFile: String, password: String): ServerSocket {
+//
+//        /* Create keystore */
+//        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+//        keyStore.load(FileInputStream(keyStoreFile), password.toCharArray())
+//
+//        /* Get factory for the given keystore */
+//        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(keyStore) }
+//        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(keyStore, password.toCharArray()) }
+//        return SSLContext.getInstance("SSL").apply { init(kmf.keyManagers, null, null) }
+//                .serverSocketFactory.createServerSocket(port)
+//
+//    }
 
     private fun matchRequest(request: HttpRequest): (HttpRequest, HttpResponse) -> Any {
         return bindings[request.method]!!.let { routes ->
@@ -168,26 +163,26 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
     fun after(call: (request: HttpRequest, response: HttpResponse) -> Any) {
         filtersAfter.put(".*", call)
     }
+//
+//    fun exception(klass: KClass<out RuntimeException>, call: (request: HttpRequest, response: HttpResponse) -> Any) {
+//        exceptions.put(klass.java, call)
+//    }
 
-    fun exception(klass: KClass<out RuntimeException>, call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        exceptions.put(klass.java, call)
-    }
-
-    fun staticFiles(path: String) {
-        val fullPath = javaClass.getResource(path).file
-        File(fullPath)
-                .walkTopDown()
-                .forEach {
-                    if (!it.isDirectory) {
-                        val file = it.path.substring(fullPath.length)
-                        val call: (HttpRequest, HttpResponse) -> Unit = { req, res -> it.inputStream().copyTo(res.stream).let { } }
-                        get(file, call)
-                        if (file == "/index.html" || file == "/index.htm") {
-                            get("/", call)
-                        }
-                    }
-                }
-    }
+//    fun staticFiles(path: String) {
+//        val fullPath = javaClass.getResource(path).file
+//        File(fullPath)
+//                .walkTopDown()
+//                .forEach {
+//                    if (!it.isDirectory) {
+//                        val file = it.path.substring(fullPath.length)
+//                        val call: (HttpRequest, HttpResponse) -> Unit = { req, res -> it.inputStream().copyTo(res.stream).let { } }
+//                        get(file, call)
+//                        if (file == "/index.html" || file == "/index.htm") {
+//                            get("/", call)
+//                        }
+//                    }
+//                }
+//    }
 }
 
 fun <T> Iterable<T>.firstOrElse(eval: () -> T): T {
