@@ -16,9 +16,10 @@ interface Socket {
 
 interface ServerSocket {
     fun accept(): Socket
+    fun close()
 }
 
-fun serverSocker(port: Int): org.kottpd.pal.ServerSocket {
+fun serverSocket(port: Int): org.kottpd.pal.ServerSocket {
     return object : org.kottpd.pal.ServerSocket {
         val socket = ServerSocket(port)
         override fun accept(): Socket {
@@ -28,6 +29,10 @@ fun serverSocker(port: Int): org.kottpd.pal.ServerSocket {
             } catch (e: IOException) {
                 throw org.kottpd.pal.IOException()
             }
+        }
+
+        override fun close() {
+            socket.close()
         }
     }
 }

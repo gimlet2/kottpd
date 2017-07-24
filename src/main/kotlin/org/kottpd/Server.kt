@@ -1,26 +1,23 @@
 package org.kottpd
 
-import org.kottpd.pal.IOException
-import org.kottpd.pal.serverSocker
+//
+//fun main(args: Array<String>) {
+//    Server().apply {
+//        //        staticFiles("/public")
+//        get("/hello", { req, res -> res.send("Hello") })
+//        get("/test", { req, res -> throw IllegalStateException("AAA") })
+//        get("/do/.*/smth", { req, res -> res.send("Hello world") })
+//        post("/data", { req, res -> res.send(req.content, Status.Created) })
+//        before("/hello", { req, res -> res.send("before\n") })
+//        before({ req, res -> res.send("ALL before\n") })
+//        after("/hello", { req, res -> res.send("\nafter\n") })
+//        after({ req, res -> res.send("ALL after\n") })
+////        exception(IllegalStateException::class, { req, res -> "Illegal State" })
+//    }.start()
+////    server.start(9443, true, "./keystore.jks", "password")
+//}
 
-
-fun main(args: Array<String>) {
-    Server().apply {
-        //        staticFiles("/public")
-        get("/hello", { req, res -> res.send("Hello") })
-        get("/test", { req, res -> throw IllegalStateException("AAA") })
-        get("/do/.*/smth", { req, res -> res.send("Hello world") })
-        post("/data", { req, res -> res.send(req.content, Status.Created) })
-        before("/hello", { req, res -> res.send("before\n") })
-        before({ req, res -> res.send("ALL before\n") })
-        after("/hello", { req, res -> res.send("\nafter\n") })
-        after({ req, res -> res.send("ALL after\n") })
-//        exception(IllegalStateException::class, { req, res -> "Illegal State" })
-    }.start()
-//    server.start(9443, true, "./keystore.jks", "password")
-}
-
-class Server(val port: Int = "9000".toInt()) {
+class Server(val port: Int = "9001".toInt()) {
 //class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
 
     //    val threadPool: ExecutorService = Executors.newCachedThreadPool()
@@ -37,22 +34,25 @@ class Server(val port: Int = "9000".toInt()) {
 
     val filtersBefore: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
     val filtersAfter: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
-    val exceptions: MutableMap<Class<out RuntimeException>, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
+//    val exceptions: MutableMap<Class<out RuntimeException>, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
 
     fun start(port: Int = this.port, secure: Boolean = false, keyStoreFile: String = "", password: String = "") {
         bindFilters()
 //        threadPool.submit {
             println("Server start on port $port")
+        var socket: org.kottpd.pal.ServerSocket? = null
             try {
-                val socket = serverSocker(port)
+                socket = serverSocket(port)
 //                        if (secure) secureSocket(port, keyStoreFile, password) else
 //                            ServerSocket(port)
                 while (true) {
 //                    threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
-                    ClientThread(socket.accept(), { matchRequest(it) }).run()
+                    if (socket != null)
+                        ClientThread(socket.accept(), { matchRequest(it) }).run()
                 }
             } catch (e: IOException) {
                 println(e.message)
+                socket?.close()
 //                System.exit(1)
             }
 //        }
@@ -76,20 +76,20 @@ class Server(val port: Int = "9000".toInt()) {
                     }
                 }
                 val actionRef = action
-                if (exceptions.isNotEmpty()) {
-                    action = { req: HttpRequest, res: HttpResponse ->
-                        try {
-                            actionRef(req, res)
-                        } catch (e: RuntimeException) {
-                            if (exceptions.contains(e.javaClass)) {
-                                exceptions[e.javaClass]!!.invoke(req, res)
-                            } else {
-                                res.send(e.message ?: "Error", Status.InternalServerError)
-                            }
-                        }
-                    }
-                    binding.value[key] = action
-                }
+//                if (exceptions.isNotEmpty()) {
+//                    action = { req: HttpRequest, res: HttpResponse ->
+//                        try {
+//                            actionRef(req, res)
+//                        } catch (e: RuntimeException) {
+//                            if (exceptions.contains(e.javaClass)) {
+//                                exceptions[e.javaClass]!!.invoke(req, res)
+//                            } else {
+//                                res.send(e.message ?: "Error", Status.InternalServerError)
+//                            }
+//                        }
+//                    }
+//                    binding.value[key] = action
+//                }
             }
         }
     }

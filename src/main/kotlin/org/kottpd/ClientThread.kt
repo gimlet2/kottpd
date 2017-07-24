@@ -1,11 +1,8 @@
 package org.kottpd
 
-import org.kottpd.pal.Reader
-import org.kottpd.pal.Socket
+class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) {
 
-class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) : Runnable {
-
-    override fun run() {
+    fun run() {
         val input = socket.reader()
         val out = socket.writer()
         val request = readRequest(input, {
