@@ -5,7 +5,7 @@ Kottpd - REST framework written in pure Kotlin. It is avaliable from maven centr
     <dependency>
         <groupId>com.github.gimlet2</groupId>
         <artifactId>kottpd</artifactId>
-        <version>0.1.2</version>
+        <version>0.1.3</version>
     </dependency>
 ```
 
