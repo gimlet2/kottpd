@@ -3,6 +3,19 @@ package org.kottpd
 import org.kottpd.pal.Socket
 import org.kottpd.pal.Reader
 
+expect class Reader {
+    open fun lines() : Sequence<String>
+    open fun line(): String
+    open fun read(): Int
+}
+
+expect class Writer
+
+expect class Socket {
+    open fun reader(): Reader
+    open fun writer() : Writer
+}
+
 class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) {
 
     fun run() {
