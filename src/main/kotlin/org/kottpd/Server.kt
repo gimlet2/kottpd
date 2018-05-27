@@ -126,7 +126,7 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                 routes.filter {
                     it.key.toRegex().matches(request.url)
                 }.values.firstOrElse {
-                    { req: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
+                    { _: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
                 }
             }
             )
@@ -154,23 +154,23 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
     }
 
     fun before(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        filtersBefore.put(path, call)
+        filtersBefore[path] = call
     }
 
     fun before(call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        filtersBefore.put(".*", call)
+        filtersBefore[".*"] = call
     }
 
     fun after(path: String, call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        filtersAfter.put(path, call)
+        filtersAfter[path] = call
     }
 
     fun after(call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        filtersAfter.put(".*", call)
+        filtersAfter[".*"] = call
     }
 
     fun exception(klass: KClass<out RuntimeException>, call: (request: HttpRequest, response: HttpResponse) -> Any) {
-        exceptions.put(klass.java, call)
+        exceptions[klass.java] = call
     }
 
     fun staticFiles(path: String) {

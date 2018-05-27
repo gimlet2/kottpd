@@ -8,6 +8,6 @@ data class HttpRequest(val method: HttpMethod,
                        val headers: Map<String, String>,
                        val stream: BufferedReader) {
     val content: String by lazy {
-        (1..headers.getOrElse("Content-Length", { "0" }).toInt()).fold("", { a, b -> a + stream.read().toChar() })
+        (1..headers.getOrElse("Content-Length", { "0" }).toInt()).fold("", { a, _ -> a + stream.read().toChar() })
     }
 }
