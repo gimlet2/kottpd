@@ -1,7 +1,7 @@
 # kottpd
 
 Kottpd - REST framework written in pure Kotlin. It is avaliable from maven central repository. It supports plain HTTP and secured HTTPs. 
-``` 
+``` xml
     <dependency>
         <groupId>com.github.gimlet2</groupId>
         <artifactId>kottpd</artifactId>
@@ -10,7 +10,7 @@ Kottpd - REST framework written in pure Kotlin. It is avaliable from maven centr
 ```
 
 
-```
+``` kotlin
     val server = Server() // default port is 9000
     server.staticFiles("/public") // specify path to static content folder
     server.get("/hello", { req, res -> res.send("Hello") }) // use res.send to send data to response explicitly
