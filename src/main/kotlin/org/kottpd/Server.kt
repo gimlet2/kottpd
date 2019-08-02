@@ -179,7 +179,7 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                 .walkTopDown()
                 .forEach {
                     if (!it.isDirectory) {
-                        val file = it.path.substring(fullPath.length)
+                        val file = it.path.substring(fullPath.length-1)
                         val call: (HttpRequest, HttpResponse) -> Unit = { req, res -> it.inputStream().copyTo(res.stream).let { } }
                         get(file, call)
                         if (file == "/index.html" || file == "/index.htm") {
