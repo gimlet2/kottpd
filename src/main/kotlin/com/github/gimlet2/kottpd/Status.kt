@@ -1,4 +1,4 @@
-package org.kottpd
+package com.github.gimlet2.kottpd
 
 enum class Status(val code: Int, val value: String) {
     // 100

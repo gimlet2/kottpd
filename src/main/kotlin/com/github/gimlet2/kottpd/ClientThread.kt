@@ -1,4 +1,4 @@
-package org.kottpd
+package com.github.gimlet2.kottpd
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -10,7 +10,7 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
     override fun run() {
         val input = BufferedReader(InputStreamReader(socket.inputStream))
         val out = socket.outputStream
-        val request = readRequest(input, {
+        val request = readRequest(input) {
             LinkedHashMap<String, String>().apply {
                 input.lineSequence().takeWhile(String::isNotBlank).forEach { line ->
                     line.split(":").let {
@@ -18,7 +18,7 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
                     }
                 }
             }
-        })
+        }
         val httpResponse = HttpResponse(stream = out)
         val result = match(request).invoke(request, httpResponse)
         if (result !is Unit) {

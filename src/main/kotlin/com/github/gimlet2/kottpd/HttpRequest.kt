@@ -1,4 +1,4 @@
-package org.kottpd
+package com.github.gimlet2.kottpd
 
 import java.io.BufferedReader
 

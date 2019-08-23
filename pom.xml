@@ -111,7 +111,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.kottpd.ServerKt</mainClass>
+                                    <mainClass>com.github.gimlet2.kottpd.ServerKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

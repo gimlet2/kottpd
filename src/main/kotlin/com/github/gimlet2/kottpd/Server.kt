@@ -1,4 +1,4 @@
-package org.kottpd
+package com.github.gimlet2.kottpd
 
 import java.io.File
 import java.io.FileInputStream
@@ -11,20 +11,21 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 
-fun main(args: Array<String>) {
+fun main() {
     Server().apply {
-        staticFiles("/public")
-        get("/hello", { req, res -> res.send("Hello") })
-        get("/test", { req, res -> throw IllegalStateException("AAA") })
-        get("/do/.*/smth", { req, res -> res.send("Hello world") })
-        post("/data", { req, res -> res.send(req.content, Status.Created) })
-        before("/hello", { req, res -> res.send("before\n") })
-        before({ req, res -> res.send("ALL before\n") })
-        after("/hello", { req, res -> res.send("\nafter\n") })
-        after({ req, res -> res.send("ALL after\n") })
-        exception(IllegalStateException::class, { req, res -> "Illegal State" })
+        //        staticFiles("/public")
+        get("/hello") { _, res -> res.send("Hello") }
+        get("/test") { _, _ -> throw IllegalStateException("AAA") }
+        get("/do/.*/smth") { _, res -> res.send("Hello world") }
+        post("/data") { req, res -> res.send(req.content, Status.Created) }
+        before("/hello") { _, res -> res.send("before\n") }
+        before { _, res -> res.send("ALL before\n") }
+        after("/hello") { _, res -> res.send("\nafter\n") }
+        after { _, res -> res.send("ALL after\n") }
+        exception(IllegalStateException::class) { _, _ -> "Illegal State" }
     }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }
@@ -54,11 +55,11 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
             try {
                 val socket = if (secure) secureSocket(port, keyStoreFile, password) else ServerSocket(port)
                 while (true) {
-                    threadPool.submit(ClientThread(socket.accept(), { matchRequest(it) }))
+                    threadPool.submit(ClientThread(socket.accept()) { matchRequest(it) })
                 }
             } catch (e: IOException) {
                 println(e.message)
-                System.exit(1)
+                exitProcess(1)
             }
         }
     }
@@ -179,8 +180,8 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                 .walkTopDown()
                 .forEach {
                     if (!it.isDirectory) {
-                        val file = it.path.substring(fullPath.length-1)
-                        val call: (HttpRequest, HttpResponse) -> Unit = { req, res -> it.inputStream().copyTo(res.stream).let { } }
+                        val file = it.path.substring(fullPath.length - 1)
+                        val call: (HttpRequest, HttpResponse) -> Unit = { _, res -> it.inputStream().copyTo(res.stream).let { } }
                         get(file, call)
                         if (file == "/index.html" || file == "/index.htm") {
                             get("/", call)
