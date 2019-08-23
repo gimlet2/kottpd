@@ -16,4 +16,4 @@ jobs:
     - name: Build with Maven
       run: mvn package --file pom.xml
     - name: Publish
-      run: mvn deploy
+      run: mvn deploy -Dtoken=$GITHUB_TOKEN
