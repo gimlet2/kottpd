@@ -6,12 +6,18 @@
 
     <groupId>com.github.gimlet2</groupId>
     <artifactId>kottpd</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
     <packaging>jar</packaging>
 
     <name>com.github.gimlet2:kottpd</name>
-    <description>Kottpd - REST framework written in pure Kotlin.
-    </description>
+    <description>Kottpd - REST framework written in pure Kotlin.</description>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/gimlet2/kottpd</url>
+        </repository>
+    </distributionManagement>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -35,7 +41,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.2.41</kotlin.version>
+        <kotlin.version>1.3.50</kotlin.version>
         <junit.version>4.12</junit.version>
     </properties>
 
@@ -48,7 +54,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.28</version>
         </dependency>
 
         <dependency>
@@ -94,7 +100,7 @@
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
