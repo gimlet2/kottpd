@@ -16,4 +16,4 @@ jobs:
     - name: Build with Maven
       run: mvn package --file pom.xml
     - name: Publish
-      run: mvn deploy -Dregistry=https://maven.pkg.github.com/gimlet2 -Dtoken=$GH_TOKEN
+      run: mvn deploy -Dregistry=https://maven.pkg.github.com/gimlet2 -Dtoken=$GITHUB_TOKEN
