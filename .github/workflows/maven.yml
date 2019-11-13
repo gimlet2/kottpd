@@ -17,6 +17,6 @@ jobs:
       run: mvn package --file pom.xml
     - name: Publish
       run: |
-        mkdir ~/.m2
-        echo "<settings><servers><server><id>github</id><username>gimlet2</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
+        mkdir -p ~/.m2
+        echo "<settings><servers><server><id>github</id><username>x-access-token</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
         mvn deploy
