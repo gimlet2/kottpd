@@ -6,23 +6,37 @@
 
     <groupId>com.github.gimlet2</groupId>
     <artifactId>kottpd</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
     <packaging>jar</packaging>
 
     <name>com.github.gimlet2:kottpd</name>
     <description>Kottpd - REST framework written in pure Kotlin.</description>
-    <distributionManagement>
-        <repository>
+    <profiles>
+        <profile>
             <id>github</id>
-            <name>GitHub OWNER Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/gimlet2/kottpd</url>
-        </repository>
-    </distributionManagement>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub OWNER Apache Maven Packages</name>
+                    <url>https://maven.pkg.github.com/gimlet2/kottpd</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>oss-sonatype</id>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <name>Central Repository OSSRH</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
+            <name>MIT</name>
+            <url>https://github.com/gimlet2/kottpd/blob/main/LICENSE</url>
         </license>
     </licenses>
 
