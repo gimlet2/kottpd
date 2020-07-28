@@ -16,12 +16,18 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.11
+    - name: Setup GPG
+      run: echo $GPG_KEY | gpg --import
+      env:
+        GPG_KEY: ${{ secrets.GPG_KEY }}
     - name: Build with Maven
       run: ./mvnw package site:jar source:jar  --file pom.xml --no-transfer-progress
     - name: Publish
-      run: ./mvnw deploy -Pgithub
+      run: ./mvnw deploy -Pgithub  -Dgpg.keyname=$GPG_KEY_ID -Dgpg.passphrase=$GPG_KEY_PASS --no-transfer-progress
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        GPG_KEY_PASS: ${{ secrets.GPG_KEY_PASS }}
     - name: Set up Maven Central Repository
       uses: actions/setup-java@v1
       with:
@@ -29,12 +35,9 @@ jobs:
         server-id: ossrh
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
-    - name: Setup GPG
-      run: echo $GPG_KEY | gpg --import
-      env:
-        GPG_KEY: ${{ secrets.GPG_KEY }}
+
     - name: Publish package
-      run: ./mvnw -B package site:jar source:jar deploy -Poss-sonatype -Dgpg.keyname=$GPG_KEY_ID -Dgpg.passphrase=$GPG_KEY_PASS
+      run: ./mvnw -B package site:jar source:jar deploy -Poss-sonatype -Dgpg.keyname=$GPG_KEY_ID -Dgpg.passphrase=$GPG_KEY_PASS --no-transfer-progress
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
