@@ -29,6 +29,7 @@ jobs:
         GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         GPG_KEY_PASS: ${{ secrets.GPG_KEY_PASS }}
     - name: Set up Maven Central Repository
+      if: ${{ always() }}
       uses: actions/setup-java@v1
       with:
         java-version: 1.11
