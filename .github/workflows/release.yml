@@ -20,14 +20,14 @@ jobs:
       run: echo "$GPG_KEY" | gpg --import --batch --yes
       env:
         GPG_KEY: ${{ secrets.GPG_KEY }}
-    - name: Build with Maven
-      run: ./mvnw package site:jar source:jar  --file pom.xml --no-transfer-progress
-    - name: Publish
-      run: ./mvnw deploy -Pgithub  -Dgpg.keyname=$GPG_KEY_ID -Dgpg.passphrase=$GPG_KEY_PASS --no-transfer-progress
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-        GPG_KEY_PASS: ${{ secrets.GPG_KEY_PASS }}
+#    - name: Build with Maven
+#      run: ./mvnw package site:jar source:jar  --file pom.xml --no-transfer-progress
+#    - name: Publish
+#      run: ./mvnw deploy -Pgithub  -Dgpg.keyname=$GPG_KEY_ID -Dgpg.passphrase=$GPG_KEY_PASS --no-transfer-progress
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+#        GPG_KEY_PASS: ${{ secrets.GPG_KEY_PASS }}
     - name: Set up Maven Central Repository
       uses: actions/setup-java@v1
       with:
