@@ -26,7 +26,7 @@ jobs:
           git config --global user.name 'gimlet2'
           git config --global user.email 'andrey.chernishov@gmail.com'
           git commit -am "Update version"
-          git push
+          git push origin HEAD:main
 
     - name: Setup GPG
       run: echo "$GPG_KEY" | gpg --import --batch --yes
