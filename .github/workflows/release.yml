@@ -20,7 +20,7 @@ jobs:
     - name: Update version
       run: mvn versions:set -DnewVersion=$VERSION --no-transfer-progress
       env:
-        VERSION: ${{ github.event.release.tag }}
+        VERSION: ${{ github.event.release.tag_name }}
     - name: Commit
       run: |
           git config --global user.name 'gimlet2'
