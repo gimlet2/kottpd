@@ -13,13 +13,13 @@ import javax.net.ssl.TrustManagerFactory
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
-
+/*** Example:
 fun main() {
     Server().apply {
-        //        staticFiles("/public")
+        staticFiles("/public")
         get("/hello") { _, res -> res.send("Hello") }
         get("/test") { _, _ -> throw IllegalStateException("AAA") }
-        get("/do/.*/smth") { _, res -> res.send("Hello world") }
+        get("/do/.&#42;/smth") { _, res -> res.send("Hello world") }
         post("/data") { req, res -> res.send(req.content, Status.Created) }
         before("/hello") { _, res -> res.send("before\n") }
         before { _, res -> res.send("ALL before\n") }
@@ -29,7 +29,7 @@ fun main() {
     }.start()
 //    server.start(9443, true, "./keystore.jks", "password")
 }
-
+***/
 class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt()) {
 
     val threadPool: ExecutorService = Executors.newCachedThreadPool()
