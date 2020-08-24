@@ -18,7 +18,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update version
-      run: mvn versions:set -DnewVersion=${{ github.event.release.tag }}
+      run: mvn versions:set -DnewVersion=$VERSION --no-transfer-progress
+      env:
+        VERSION: ${{ github.event.release.tag }}
     - name: Commit
       run: |
           git config --global user.name 'gimlet2'
