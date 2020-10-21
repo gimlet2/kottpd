@@ -188,7 +188,7 @@
             <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
-                <version>1.4.10</version>
+                <version>1.4.10.2</version>
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
@@ -201,7 +201,7 @@
                                 <plugin>
                                     <groupId>org.jetbrains.dokka</groupId>
                                     <artifactId>kotlin-as-java-plugin</artifactId>
-                                    <version>1.4.10</version>
+                                    <version>1.4.10.2</version>
                                 </plugin>
                             </dokkaPlugins>
                             <jdkVersion>11</jdkVersion>
