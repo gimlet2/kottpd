@@ -110,8 +110,8 @@
     </pluginRepositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.4.10</kotlin.version>
-        <junit.version>4.13</junit.version>
+        <kotlin.version>1.4.21</kotlin.version>
+        <junit.version>4.13.1</junit.version>
     </properties>
 
     <dependencies>
@@ -188,7 +188,7 @@
             <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
-                <version>1.4.10</version>
+                <version>1.4.20</version>
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
@@ -201,7 +201,7 @@
                                 <plugin>
                                     <groupId>org.jetbrains.dokka</groupId>
                                     <artifactId>kotlin-as-java-plugin</artifactId>
-                                    <version>1.4.10</version>
+                                    <version>1.4.20</version>
                                 </plugin>
                             </dokkaPlugins>
                             <jdkVersion>11</jdkVersion>
