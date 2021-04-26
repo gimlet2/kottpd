@@ -6,7 +6,7 @@
 
     <groupId>com.github.gimlet2</groupId>
     <artifactId>kottpd</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <packaging>jar</packaging>
 
     <name>com.github.gimlet2:kottpd</name>
@@ -110,8 +110,8 @@
     </pluginRepositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.4.21</kotlin.version>
-        <junit.version>4.13.1</junit.version>
+        <kotlin.version>1.4.31</kotlin.version>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencies>
@@ -188,7 +188,7 @@
             <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
-                <version>1.4.20</version>
+                <version>1.4.20-dev-65</version>
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
@@ -201,7 +201,7 @@
                                 <plugin>
                                     <groupId>org.jetbrains.dokka</groupId>
                                     <artifactId>kotlin-as-java-plugin</artifactId>
-                                    <version>1.4.20</version>
+                                    <version>1.4.20-dev-65</version>
                                 </plugin>
                             </dokkaPlugins>
                             <jdkVersion>11</jdkVersion>
