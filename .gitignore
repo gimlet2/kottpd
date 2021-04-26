@@ -3,3 +3,7 @@ build/
 .idea/
 upload/
 target/
+bin/
+.settings/
+.classpath
+.project
