@@ -110,7 +110,7 @@
     </pluginRepositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.5.20</kotlin.version>
+        <kotlin.version>1.5.21</kotlin.version>
         <junit.version>4.13.2</junit.version>
     </properties>
 
