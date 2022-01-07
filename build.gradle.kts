@@ -28,15 +28,14 @@ kotlin {
 
     nativeTarget.apply {
         binaries {
-            executable {
-                entryPoint = "main"
+            staticLib{
+                baseName = "kottpd"
             }
         }
     }
     sourceSets {
         val commonMain by getting
         val nativeMain by getting
-        val nativeTest by getting
         val desktopMain by getting
         val desktopTest by getting
 
