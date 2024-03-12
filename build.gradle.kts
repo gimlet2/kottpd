@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.6.10"
+    kotlin("multiplatform") version "1.9.21"
 }
 
 group = "com.github.gimlet2.kottpd"
@@ -12,7 +12,7 @@ repositories {
 kotlin {
     jvm("desktop") {
         compilations.all {
-            kotlinOptions.jvmTarget = "17"
+            kotlinOptions.jvmTarget = "20"
         }
         withJava()
     }
@@ -28,6 +28,9 @@ kotlin {
 
     nativeTarget.apply {
         binaries {
+            executable {
+                baseName = "kottpd"
+            }
             staticLib{
                 baseName = "kottpd"
             }

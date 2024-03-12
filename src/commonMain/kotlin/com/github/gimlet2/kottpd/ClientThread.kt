@@ -1,18 +1,16 @@
 package com.github.gimlet2.kottpd
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.Socket
-import java.util.*
+/**
+ * Created by Andrei Chernyshev on 1/14/22.
+ */
+class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) {
 
-class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest, HttpResponse) -> Any) : Runnable {
-
-    override fun run() {
-        val input = BufferedReader(InputStreamReader(socket.inputStream))
-        val out = socket.outputStream
+    fun run() {
+        val input = socket.reader
+        val out = socket.writer
         val request = readRequest(input) {
             LinkedHashMap<String, String>().apply {
-                input.lineSequence().takeWhile(String::isNotBlank).forEach { line ->
+                input.lines().takeWhile(String::isNotBlank).forEach { line: String ->
                     line.split(":").let {
                         put(it[0], it[1].trim())
                     }
@@ -28,10 +26,9 @@ class ClientThread(val socket: Socket, val match: (HttpRequest) -> (HttpRequest,
         socket.close()
     }
 
-    fun readRequest(reader: BufferedReader, eval: () -> Map<String, String>): HttpRequest {
-        reader.readLine().split(' ').let {
+    fun readRequest(reader: Reader, eval: () -> Map<String, String>): HttpRequest {
+        reader.line().split(' ').let {
             return HttpRequest(HttpMethod.valueOf(it[0]), it[1], it[2], eval(), reader)
         }
     }
 }
-
