@@ -147,7 +147,7 @@ Successfully completed a comprehensive review of the Kottpd repository and imple
 ### Documentation Quality
 - **Before**: 1 file (README.md), ~30 lines of examples
 - **After**: 11 files, ~1,941 lines of comprehensive documentation
-- **Increase**: ~6,470% improvement in documentation
+- **Increase**: ~6,370% improvement (calculation: (1941-30)/30 * 100)
 
 ### Build Configuration
 - **Before**: Outdated dependencies, Dokka warnings
@@ -312,7 +312,7 @@ All documentation cross-references properly:
 - ROADMAP.md aligns with REVIEW.md recommendations
 - Examples demonstrate concepts from README
 
-**Total Lines of Code/Documentation Added:** ~2,500+ lines  
+**Total Lines of Code/Documentation Added:** ~2,200+ lines (1,941 docs + 200 examples + config files)  
 **Total Files Created/Modified:** 18 files  
 **Build Status:** ✅ Passing  
 **Documentation Quality:** ✅ Professional  
