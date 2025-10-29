@@ -335,7 +335,7 @@ fun validateSession(sessionId: String?): Session? {
 <dependency>
     <groupId>org.jetbrains.kotlin</groupId>
     <artifactId>kotlin-stdlib</artifactId>
-    <version>1.9.23</version> <!-- Keep up to date -->
+    <version>2.0.21</version> <!-- Keep up to date -->
 </dependency>
 ```
 
