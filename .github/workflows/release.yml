@@ -38,7 +38,7 @@ jobs:
           git checkout -b "release-$VERSION"
           if ! git diff --quiet || ! git diff --cached --quiet; then
             git commit -am "Update version to $VERSION"
-            git push origin release-$VERSION
+            git push origin "release-$VERSION"
             echo "changes_committed=true" >> $GITHUB_OUTPUT
           else
             echo "No changes to commit"
