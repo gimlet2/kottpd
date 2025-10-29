@@ -1,0 +1,31 @@
+# .gitattributes - Ensures consistent line endings
+* text=auto
+
+# Kotlin files
+*.kt text eol=lf
+*.kts text eol=lf
+
+# Configuration files
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.properties text eol=lf
+*.md text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+mvnw.cmd text eol=crlf
+
+# Binary files
+*.jar binary
+*.jks binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
