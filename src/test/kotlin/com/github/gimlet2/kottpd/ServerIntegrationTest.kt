@@ -20,8 +20,8 @@ class ServerIntegrationTest {
 
     @After
     fun tearDown() {
-        // Shutdown the thread pool to stop the server
-        server?.threadPool?.shutdownNow()
+        // Shutdown the server
+        server?.shutdown()
         Thread.sleep(200) // Give it time to shutdown
     }
 

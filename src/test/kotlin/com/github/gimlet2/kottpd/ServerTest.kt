@@ -191,4 +191,16 @@ class ServerTest {
         assertTrue(output.contains("201 Created"))
         assertTrue(output.contains("test"))
     }
+
+    @Test
+    fun testServerShutdown() {
+        val server = Server()
+        server.get("/test") { _, _ -> "Test" }
+        
+        // Server should have a shutdown method
+        server.shutdown()
+        
+        // Thread pool should be shut down
+        assertTrue(server.threadPool.isShutdown)
+    }
 }
