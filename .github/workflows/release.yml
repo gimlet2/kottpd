@@ -35,18 +35,27 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git checkout -b release-$VERSION
-          git commit -am "Update version to $VERSION"
-          git push origin release-$VERSION
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            git commit -am "Update version to $VERSION"
+            git push origin release-$VERSION
+          else
+            echo "No changes to commit"
+          fi
       env:
         VERSION: ${{ github.event.release.tag_name }}
     
     - name: Create Pull Request
       run: |
-          gh pr create \
-            --base main \
-            --head release-$VERSION \
-            --title "Release $VERSION" \
-            --body "Automated release PR for version $VERSION. This PR updates the version in pom.xml to match the release tag."
+          # Check if PR already exists
+          if ! gh pr list --head release-$VERSION --base main --state open --json number --jq '.[0].number' | grep -q .; then
+            gh pr create \
+              --base main \
+              --head release-$VERSION \
+              --title "Release $VERSION" \
+              --body "Automated release PR for version $VERSION. This PR updates the version in pom.xml to match the release tag."
+          else
+            echo "PR already exists for release-$VERSION"
+          fi
       env:
         VERSION: ${{ github.event.release.tag_name }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
