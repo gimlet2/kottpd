@@ -6,7 +6,7 @@
 
     <groupId>com.github.gimlet2</groupId>
     <artifactId>kottpd</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.5</version>
     <packaging>jar</packaging>
 
     <name>com.github.gimlet2:kottpd</name>
