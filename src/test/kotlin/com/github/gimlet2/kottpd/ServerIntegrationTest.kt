@@ -2,7 +2,9 @@ package com.github.gimlet2.kottpd
 
 import org.junit.After
 import org.junit.Test
+import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.Socket
 import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -16,13 +18,55 @@ class ServerIntegrationTest {
         private val portCounter = AtomicInteger(10000)
         
         private fun getNextPort(): Int = portCounter.getAndIncrement()
+        
+        private fun waitForServerToStart(port: Int, maxAttempts: Int = 50, delayMs: Long = 100) {
+            repeat(maxAttempts) { attempt ->
+                try {
+                    Socket("localhost", port).use { 
+                        // Successfully connected, server is up
+                    }
+                    return
+                } catch (e: ConnectException) {
+                    if (attempt == maxAttempts - 1) {
+                        throw RuntimeException("Server failed to start on port $port", e)
+                    }
+                    Thread.sleep(delayMs)
+                }
+            }
+        }
+        
+        private fun makeHttpRequest(
+            port: Int,
+            path: String,
+            method: String = "GET",
+            body: String? = null
+        ): Pair<Int, String> {
+            val url = URL("http://localhost:$port$path")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = method
+            
+            if (body != null) {
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", "text/plain")
+                connection.outputStream.write(body.toByteArray())
+            }
+            
+            val responseCode = connection.responseCode
+            val responseBody = if (responseCode >= 400) {
+                connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+            } else {
+                connection.inputStream.bufferedReader().use { it.readText() }
+            }
+            
+            return Pair(responseCode, responseBody)
+        }
     }
 
     @After
     fun tearDown() {
         // Shutdown the server
         server?.shutdown()
-        Thread.sleep(200) // Give it time to shutdown
+        Thread.sleep(100) // Brief pause for cleanup
     }
 
     @Test
@@ -34,16 +78,10 @@ class ServerIntegrationTest {
         server!!.get("/test") { _, _ -> "Hello from GET" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make HTTP request
-        val url = URL("http://localhost:$testPort/test")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/test")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Hello from GET"))
@@ -58,21 +96,10 @@ class ServerIntegrationTest {
         server!!.post("/data") { req, _ -> "Received: ${req.content}" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make HTTP POST request
-        val url = URL("http://localhost:$testPort/data")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.doOutput = true
-        connection.setRequestProperty("Content-Type", "text/plain")
-        
-        val postData = "test data"
-        connection.outputStream.write(postData.toByteArray())
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/data", "POST", "test data")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Received: test data"))
@@ -87,16 +114,10 @@ class ServerIntegrationTest {
         server!!.put("/update") { _, _ -> "Updated" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make HTTP PUT request
-        val url = URL("http://localhost:$testPort/update")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "PUT"
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/update", "PUT")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Updated"))
@@ -111,16 +132,10 @@ class ServerIntegrationTest {
         server!!.delete("/remove") { _, _ -> "Deleted" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make HTTP DELETE request
-        val url = URL("http://localhost:$testPort/remove")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "DELETE"
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/remove", "DELETE")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Deleted"))
@@ -135,21 +150,10 @@ class ServerIntegrationTest {
         server!!.get("/exists") { _, _ -> "Found" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Request a non-existent route
-        val url = URL("http://localhost:$testPort/notfound")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseCode = connection.responseCode
-        // For error responses (4xx, 5xx), use errorStream instead of inputStream
-        val responseBody = if (responseCode >= 400) {
-            connection.errorStream.bufferedReader().use { it.readText() }
-        } else {
-            connection.inputStream.bufferedReader().use { it.readText() }
-        }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/notfound")
         
         assertEquals(404, responseCode)
         assertTrue(responseBody.contains("Resource not found"))
@@ -164,16 +168,10 @@ class ServerIntegrationTest {
         server!!.get("/do/.*/smth") { _, _ -> "Regex matched" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Test regex route
-        val url = URL("http://localhost:$testPort/do/anything/smth")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/do/anything/smth")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Regex matched"))
@@ -189,15 +187,10 @@ class ServerIntegrationTest {
         server!!.get("/filtered") { _, res -> res.send("MAIN") }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make request
-        val url = URL("http://localhost:$testPort/filtered")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (_, responseBody) = makeHttpRequest(testPort, "/filtered")
         
         assertTrue(responseBody.contains("BEFORE"))
         assertTrue(responseBody.contains("MAIN"))
@@ -213,15 +206,10 @@ class ServerIntegrationTest {
         server!!.after("/filtered") { _, res -> res.send(" AFTER") }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make request
-        val url = URL("http://localhost:$testPort/filtered")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (_, responseBody) = makeHttpRequest(testPort, "/filtered")
         
         assertTrue(responseBody.contains("MAIN"))
         assertTrue(responseBody.contains("AFTER"))
@@ -237,16 +225,10 @@ class ServerIntegrationTest {
         server!!.exception(IllegalStateException::class) { _, _ -> "Error handled" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Make request
-        val url = URL("http://localhost:$testPort/error")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        
-        val responseCode = connection.responseCode
-        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        val (responseCode, responseBody) = makeHttpRequest(testPort, "/error")
         
         assertEquals(200, responseCode)
         assertTrue(responseBody.contains("Error handled"))
@@ -263,26 +245,18 @@ class ServerIntegrationTest {
         server!!.post("/route3") { _, _ -> "Route 3" }
         server!!.start(testPort)
         
-        // Wait for server to start
-        Thread.sleep(500)
+        waitForServerToStart(testPort)
         
         // Test first route
-        var url = URL("http://localhost:$testPort/route1")
-        var connection = url.openConnection() as HttpURLConnection
-        var responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+        var (_, responseBody) = makeHttpRequest(testPort, "/route1")
         assertTrue(responseBody.contains("Route 1"))
         
         // Test second route
-        url = URL("http://localhost:$testPort/route2")
-        connection = url.openConnection() as HttpURLConnection
-        responseBody = connection.inputStream.bufferedReader().use { it.readText() }
-        assertTrue(responseBody.contains("Route 2"))
+        val (_, responseBody2) = makeHttpRequest(testPort, "/route2")
+        assertTrue(responseBody2.contains("Route 2"))
         
         // Test third route (POST)
-        url = URL("http://localhost:$testPort/route3")
-        connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        responseBody = connection.inputStream.bufferedReader().use { it.readText() }
-        assertTrue(responseBody.contains("Route 3"))
+        val (_, responseBody3) = makeHttpRequest(testPort, "/route3", "POST")
+        assertTrue(responseBody3.contains("Route 3"))
     }
 }
