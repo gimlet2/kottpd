@@ -57,7 +57,7 @@ jobs:
               --base main \
               --head "release-$VERSION" \
               --title "Release $VERSION" \
-              --body "Automated release PR for version $VERSION. This PR updates the version in pom.xml to match the release tag.")
+              --body "Automated release PR for version $VERSION. This PR updates the version in pom.xml to match the release tag."
             echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
             echo "Created PR: $PR_URL"
           else
