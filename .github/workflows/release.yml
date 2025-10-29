@@ -31,6 +31,7 @@ jobs:
         VERSION: ${{ github.event.release.tag_name }}
     
     - name: Create release branch and commit changes
+      id: create_branch
       run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -38,16 +39,19 @@ jobs:
           if ! git diff --quiet || ! git diff --cached --quiet; then
             git commit -am "Update version to $VERSION"
             git push origin release-$VERSION
+            echo "changes_committed=true" >> $GITHUB_OUTPUT
           else
             echo "No changes to commit"
+            echo "changes_committed=false" >> $GITHUB_OUTPUT
           fi
       env:
         VERSION: ${{ github.event.release.tag_name }}
     
     - name: Create Pull Request
+      if: steps.create_branch.outputs.changes_committed == 'true'
       run: |
           # Check if PR already exists
-          if ! gh pr list --head release-$VERSION --base main --state open --json number --jq '.[0].number' | grep -q .; then
+          if [ "$(gh pr list --head release-$VERSION --base main --state open --json number | jq 'length')" -eq 0 ]; then
             gh pr create \
               --base main \
               --head release-$VERSION \
