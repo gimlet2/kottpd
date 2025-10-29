@@ -3,6 +3,9 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.gimlet2/kottpd.svg)](https://search.maven.org/artifact/com.github.gimlet2/kottpd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-blue.svg)](https://kotlinlang.org)
+[![Build](https://github.com/gimlet2/kottpd/actions/workflows/build.yml/badge.svg)](https://github.com/gimlet2/kottpd/actions/workflows/build.yml)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 A lightweight REST framework written in pure Kotlin with zero external dependencies. Perfect for building microservices, REST APIs, and simple web servers.
 
