@@ -7,9 +7,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up JDK 11
       uses: actions/setup-java@v4
@@ -25,14 +30,52 @@ jobs:
       env:
         VERSION: ${{ github.event.release.tag_name }}
     
-    - name: Commit version update
+    - name: Create release branch and commit changes
+      id: create_branch
       run: |
-          git config --global user.name 'gimlet2'
-          git config --global user.email 'andrey.chernishov@gmail.com'
-          git commit -am "Update version to $VERSION"
-          git push origin HEAD:main
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b "release-$VERSION"
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            git commit -am "Update version to $VERSION"
+            git push origin "release-$VERSION"
+            echo "changes_committed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes to commit"
+            echo "changes_committed=false" >> $GITHUB_OUTPUT
+          fi
       env:
         VERSION: ${{ github.event.release.tag_name }}
+    
+    - name: Create Pull Request
+      if: steps.create_branch.outputs.changes_committed == 'true'
+      id: create_pr
+      run: |
+          # Check if PR already exists
+          if [ "$(gh pr list --head "release-$VERSION" --base main --state open --json number | jq 'length')" -eq 0 ]; then
+            gh pr create \
+              --base main \
+              --head "release-$VERSION" \
+              --title "Release $VERSION" \
+              --body "Automated release PR for version $VERSION. This PR updates the version in pom.xml to match the release tag.")
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+            echo "Created PR: $PR_URL"
+          else
+            PR_URL=$(gh pr list --head release-$VERSION --base main --state open --json url --jq '.[0].url')
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+            echo "PR already exists: $PR_URL"
+          fi
+      env:
+        VERSION: ${{ github.event.release.tag_name }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Enable auto-merge for PR
+      if: steps.create_branch.outputs.changes_committed == 'true' && steps.create_pr.outputs.pr_url != ''
+      run: |
+          gh pr merge "${{ steps.create_pr.outputs.pr_url }}" --auto --squash
+          echo "Auto-merge enabled. PR will be merged automatically once all checks pass."
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup GPG
       run: echo "$GPG_KEY" | gpg --import --batch --yes
