@@ -189,6 +189,10 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
                     }
                 }
     }
+
+    fun shutdown() {
+        threadPool.shutdownNow()
+    }
 }
 
 fun <T> Iterable<T>.firstOrElse(eval: () -> T): T {
