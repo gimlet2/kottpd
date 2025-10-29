@@ -1,0 +1,44 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Kotlin files
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+
+# XML files (Maven POM)
+[*.xml]
+indent_style = space
+indent_size = 4
+
+# YAML files (GitHub Actions, etc.)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Properties files
+[*.properties]
+indent_style = space
+indent_size = 4
