@@ -103,7 +103,7 @@
     </developers>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>2.2.0</kotlin.version>
+        <kotlin.version>2.3.20</kotlin.version>
         <dokka.version>2.0.0</dokka.version>
         <junit.version>4.13.2</junit.version>
         <jacoco.version>0.8.13</jacoco.version>
