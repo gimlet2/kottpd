@@ -259,4 +259,29 @@ class ServerIntegrationTest {
         val (_, responseBody3) = makeHttpRequest(testPort, "/route3", "POST")
         assertTrue(responseBody3.contains("Route 3"))
     }
+
+    @Test
+    fun testHeaderWithColonInValue() {
+        val testPort = getNextPort()
+        server = Server(testPort)
+
+        // Echo a header whose value contains a colon (e.g., a synthetic date-like header)
+        server!!.get("/echo-header") { req, res ->
+            res.send(req.headers.getOrElse("X-Time") { "missing" })
+        }
+        server!!.start(testPort)
+
+        waitForServerToStart(testPort)
+
+        val url = URL("http://localhost:$testPort/echo-header")
+        val connection = url.openConnection() as java.net.HttpURLConnection
+        connection.requestMethod = "GET"
+        connection.setRequestProperty("X-Time", "12:34:56")
+
+        val responseCode = connection.responseCode
+        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+
+        assertEquals(200, responseCode)
+        assertTrue(responseBody.contains("12:34:56"))
+    }
 }

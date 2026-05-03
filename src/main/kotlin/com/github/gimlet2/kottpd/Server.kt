@@ -34,14 +34,14 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     val threadPool: ExecutorService = Executors.newCachedThreadPool()
     val bindings: Map<HttpMethod, MutableMap<String, (HttpRequest, HttpResponse) -> Any>> = mapOf(
-            Pair(HttpMethod.GET, mutableMapOf()),
-            Pair(HttpMethod.POST, mutableMapOf()),
-            Pair(HttpMethod.PUT, mutableMapOf()),
-            Pair(HttpMethod.DELETE, mutableMapOf()),
-            Pair(HttpMethod.OPTIONS, mutableMapOf()),
-            Pair(HttpMethod.CONNECT, mutableMapOf()),
-            Pair(HttpMethod.HEAD, mutableMapOf()),
-            Pair(HttpMethod.TRACE, mutableMapOf())
+        HttpMethod.GET to mutableMapOf(),
+        HttpMethod.POST to mutableMapOf(),
+        HttpMethod.PUT to mutableMapOf(),
+        HttpMethod.DELETE to mutableMapOf(),
+        HttpMethod.OPTIONS to mutableMapOf(),
+        HttpMethod.CONNECT to mutableMapOf(),
+        HttpMethod.HEAD to mutableMapOf(),
+        HttpMethod.TRACE to mutableMapOf()
     )
 
     val filtersBefore: MutableMap<String, (HttpRequest, HttpResponse) -> Any> = mutableMapOf()
@@ -65,72 +65,63 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
     }
 
     private fun bindFilters() {
-        for (binding in bindings) {
-            val iterator = binding.value.iterator()
-            while (iterator.hasNext()) {
-                var (key, action) = iterator.next()
-                for ((path, before) in filtersBefore) {
+        bindings.forEach { (_, routes) ->
+            routes.keys.toList().forEach { key ->
+                var action = routes[key]!!
+                filtersBefore.forEach { (path, before) ->
                     if (key == path || key.matches(path.toRegex())) {
                         action = chain(before, action)
-                        binding.value[key] = action
+                        routes[key] = action
                     }
                 }
-                for ((path, after) in filtersAfter) {
+                filtersAfter.forEach { (path, after) ->
                     if (key == path || key.matches(path.toRegex())) {
                         action = chain(action, after)
-                        binding.value[key] = action
+                        routes[key] = action
                     }
                 }
-                val actionRef = action
                 if (exceptions.isNotEmpty()) {
-                    action = { req: HttpRequest, res: HttpResponse ->
+                    val actionRef = action
+                    routes[key] = { req, res ->
                         try {
                             actionRef(req, res)
                         } catch (e: RuntimeException) {
-                            if (exceptions.contains(e.javaClass)) {
-                                exceptions[e.javaClass]!!.invoke(req, res)
+                            if (e.javaClass in exceptions) {
+                                exceptions[e.javaClass]!!(req, res)
                             } else {
                                 res.send(e.message ?: "Error", Status.InternalServerError)
                             }
                         }
                     }
-                    binding.value[key] = action
                 }
             }
         }
     }
 
     private fun chain(a: (HttpRequest, HttpResponse) -> Any, b: (HttpRequest, HttpResponse) -> Any): (HttpRequest, HttpResponse) -> Any {
-        return { req: HttpRequest, res: HttpResponse ->
-            a.invoke(req, res)
-            b.invoke(req, res)
+        return { req, res ->
+            a(req, res)
+            b(req, res)
         }
     }
 
     private fun secureSocket(port: Int, keyStoreFile: String, password: String): ServerSocket {
-
-        /* Create keystore */
         val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(FileInputStream(keyStoreFile), password.toCharArray())
+        FileInputStream(keyStoreFile).use { keyStore.load(it, password.toCharArray()) }
 
-        /* Get factory for the given keystore */
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(keyStore) }
         val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(keyStore, password.toCharArray()) }
         return SSLContext.getInstance("SSL").apply { init(kmf.keyManagers, null, null) }
-                .serverSocketFactory.createServerSocket(port)
-
+            .serverSocketFactory.createServerSocket(port)
     }
 
     private fun matchRequest(request: HttpRequest): (HttpRequest, HttpResponse) -> Any {
         return bindings[request.method]!!.let { routes ->
-            routes.getOrElse(request.url, {
-                routes.filter {
-                    it.key.toRegex().matches(request.url)
-                }.values.firstOrElse {
-                    { _: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) }
-                }
+            routes.getOrElse(request.url) {
+                routes.filter { it.key.toRegex().matches(request.url) }
+                    .values
+                    .firstOrElse { { _: HttpRequest, res: HttpResponse -> res.send("Resource not found", Status.NotFound) } }
             }
-            )
         }
     }
 
@@ -176,18 +167,16 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
 
     fun staticFiles(path: String) {
         val fullPath = javaClass.getResource(path).file
-        File(fullPath)
-                .walkTopDown()
-                .forEach {
-                    if (!it.isDirectory) {
-                        val file = it.path.substring(fullPath.length - 1)
-                        val call: (HttpRequest, HttpResponse) -> Unit = { _, res -> it.inputStream().copyTo(res.stream).let { } }
-                        get(file, call)
-                        if (file == "/index.html" || file == "/index.htm") {
-                            get("/", call)
-                        }
-                    }
+        File(fullPath).walkTopDown().forEach {
+            if (!it.isDirectory) {
+                val file = it.path.substring(fullPath.length - 1)
+                val call: (HttpRequest, HttpResponse) -> Unit = { _, res -> it.inputStream().copyTo(res.stream) }
+                get(file, call)
+                if (file == "/index.html" || file == "/index.htm") {
+                    get("/", call)
                 }
+            }
+        }
     }
 
     fun shutdown() {
@@ -195,7 +184,5 @@ class Server(val port: Int = (System.getProperty("server.port") ?: "9000").toInt
     }
 }
 
-fun <T> Iterable<T>.firstOrElse(eval: () -> T): T {
-    return this.firstOrNull() ?: return eval.invoke()
-}
+fun <T> Iterable<T>.firstOrElse(eval: () -> T): T = firstOrNull() ?: eval()
 
