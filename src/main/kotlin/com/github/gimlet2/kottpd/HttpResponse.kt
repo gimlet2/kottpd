@@ -16,7 +16,7 @@ data class HttpResponse(var status: Status = Status.OK,
         if (!dirty) {
             printWriter.println("HTTP/1.1 ${status.code} ${status.value}")
             if (headers.isNotEmpty()) {
-                headers.forEach { printWriter.println("${it.key}: ${it.value}") }
+                headers.forEach { (key, value) -> printWriter.println("$key: $value") }
             }
             printWriter.println()
             dirty = true

@@ -42,6 +42,28 @@ class ClientThreadTest {
         assertEquals("/data", request.url)
     }
 
+    @Test
+    fun testReadRequestHeaderWithColonInValue() {
+        val requestLine = "GET /time HTTP/1.1\nDate: Mon, 01 Jan 2024 12:00:00 GMT\n\n"
+        val reader = BufferedReader(StringReader(requestLine))
+
+        val clientThread = ClientThread(createMockSocket(), { _ -> { _, res -> res.send("OK") } })
+
+        val request = clientThread.readRequest(reader) {
+            buildMap {
+                reader.lineSequence().takeWhile(String::isNotBlank).forEach { line ->
+                    val colonIndex = line.indexOf(':')
+                    if (colonIndex > 0) {
+                        put(line.substring(0, colonIndex), line.substring(colonIndex + 1).trim())
+                    }
+                }
+            }
+        }
+
+        assertEquals(HttpMethod.GET, request.method)
+        assertEquals("/time", request.url)
+    }
+
     private fun createMockSocket(): Socket {
         // Create a mock socket for testing - we won't actually use it in these tests
         // In real scenarios, you'd use a mocking framework, but for minimal dependencies we create a simple stub
